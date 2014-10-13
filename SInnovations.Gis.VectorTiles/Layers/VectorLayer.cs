@@ -1,0 +1,56 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Data.Entity;
+using System.Data.Entity.Spatial;
+using System.Data.Entity.SqlServer;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace SInnovations.Gis.VectorTiles.Layers
+{
+    public static  class VectorLayerHelperExtensions
+    {
+        public static IEnumerable<OgrEntity> Reduce(this IQueryable<OgrEntity> query, double threshold)
+        {
+            return query.Select(s => new
+                      {
+                          g = SqlSpatialFunctions.Reduce(s.Geometry, threshold),
+                          s
+                      }).AsEnumerable().Select(t => { t.s.Geometry = t.g; return t.s; });
+        }
+    }
+    public class VectorLayer<T,T1> : DbContext, ILayerContext<T1> where T : OgrEntity ,T1
+    {
+        private string tableName;
+        private string idColumn;
+     //   private string geomName;
+        public VectorLayer(string conn, string tableName, string idColumn, string geom)
+            : base(conn)
+        {
+            this.tableName = tableName;
+            this.idColumn = idColumn;
+            this.GeomColumn = geom;
+
+        }
+        public string GeomColumn { get; set; }
+        
+        public DbSet<T> Layer { get; set; }
+
+        protected override void OnModelCreating(DbModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<T>().Property(t => t.Id).HasColumnName(this.idColumn);
+            modelBuilder.Entity<T>().HasKey(t => t.Id);
+            modelBuilder.Entity<T>().ToTable(this.tableName);
+            modelBuilder.Entity<T>().Property(t => t.Geometry).HasColumnName(this.GeomColumn);
+
+
+            base.OnModelCreating(modelBuilder);
+        }
+        public IQueryable<T1> GetRegion(DbGeometry bbox)
+        {
+            return Layer.Where(c => c.Geometry.Intersects(bbox));
+        }
+        
+    }
+}
