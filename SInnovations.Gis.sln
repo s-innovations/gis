@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SInnovations.Gis.TileGrid",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SInnovations.Gis.VectorTiles", "SInnovations.Gis.VectorTiles\SInnovations.Gis.VectorTiles.csproj", "{E0086074-ECF3-40F3-8D78-FF297D2AA9D5}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SInnovations.Gis.Vector", "SInnovations.Gis.Vector\SInnovations.Gis.Vector.csproj", "{4FD26D8F-6E0C-4001-93C8-6D9851AA8208}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{E0086074-ECF3-40F3-8D78-FF297D2AA9D5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E0086074-ECF3-40F3-8D78-FF297D2AA9D5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E0086074-ECF3-40F3-8D78-FF297D2AA9D5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4FD26D8F-6E0C-4001-93C8-6D9851AA8208}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4FD26D8F-6E0C-4001-93C8-6D9851AA8208}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4FD26D8F-6E0C-4001-93C8-6D9851AA8208}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4FD26D8F-6E0C-4001-93C8-6D9851AA8208}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
