@@ -6,9 +6,9 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("SInnovations.Gis.Vector")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("Core Library for representing Ogr2Ogr vector tables from MSSQL using entity framework")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
+[assembly: AssemblyCompany("S-Innovations /v Poul Kjeldager Sørensen")]
 [assembly: AssemblyProduct("SInnovations.Gis.Vector")]
 [assembly: AssemblyCopyright("Copyright ©  2014")]
 [assembly: AssemblyTrademark("")]
@@ -34,3 +34,4 @@ using System.Runtime.InteropServices;
 // [assembly: AssemblyVersion("1.0.*")]
 [assembly: AssemblyVersion("1.0.0.0")]
 [assembly: AssemblyFileVersion("1.0.0.0")]
+[assembly:AssemblyInformationalVersion("1.0.0")]
