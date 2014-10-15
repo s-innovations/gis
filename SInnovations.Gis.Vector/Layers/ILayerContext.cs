@@ -13,5 +13,8 @@ namespace SInnovations.Gis.VectorTiles.Layers
     public interface ILayerContext<T> : IDisposable
     {
         IQueryable<T> GetRegion(DbGeometry bbox);
+        int SaveChanges();
+        void Add(T entity);
+        void Delete(int id);
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.Entity;
+using System.Data.Entity.Infrastructure;
 using System.Data.Entity.Spatial;
 using System.Data.Entity.SqlServer;
 using System.Linq;
@@ -51,6 +52,65 @@ namespace SInnovations.Gis.VectorTiles.Layers
         {
             return Layer.Where(c => c.Geometry.Intersects(bbox));
         }
+
+        public void Add(T1 entity)
+        {
+            var instance = Activator.CreateInstance(typeof(T)) as T;
+            var propsT = typeof(T).GetProperties();
+            var propsT1Names = typeof(T1).GetProperties().Select(p => p.Name);
+            foreach (var prop in propsT)
+            {
+                if (propsT1Names.Contains(prop.Name))
+                {
+                    prop.SetValue(instance, prop.GetValue(entity));
+                }
+            }
+            Add(instance);
+        }
+
+        private T GetById(int id)
+        {
+            return Layer.Find(id);
+        }
+
+        private void Add(T entity)
+        {
+            DbEntityEntry dbEntityEntry = Entry(entity);
+            if (dbEntityEntry.State != EntityState.Detached)
+            {
+                dbEntityEntry.State = EntityState.Added;
+            }
+            else
+            {
+                Layer.Add(entity);
+            }
+        }
+
+        private void Delete(T entity)
+        {
+            DbEntityEntry dbEntityEntry = Entry(entity);
+            if (dbEntityEntry.State != EntityState.Deleted)
+            {
+                dbEntityEntry.State = EntityState.Deleted;
+            }
+            else
+            {
+                Layer.Attach(entity);
+                Layer.Remove(entity);
+            }
+        }
+
+        public void Delete(int id)
+        {
+            var entity = GetById(id);
+            if (entity == null) return;
+            Delete(entity);
+        }
+
+        public override int SaveChanges()
+        {
+            return base.SaveChanges();
+        } 
         
     }
 }
