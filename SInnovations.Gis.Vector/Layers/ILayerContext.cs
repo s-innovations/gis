@@ -16,5 +16,6 @@ namespace SInnovations.Gis.VectorTiles.Layers
         int SaveChanges();
         void Add(T entity);
         void Delete(int id);
+        void Update(T entity);
     }
 }

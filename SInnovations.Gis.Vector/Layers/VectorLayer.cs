@@ -53,36 +53,22 @@ namespace SInnovations.Gis.VectorTiles.Layers
             return Layer.Where(c => c.Geometry.Intersects(bbox));
         }
 
-        public void Add(T1 entity)
-        {
-            var instance = Activator.CreateInstance(typeof(T)) as T;
-            var propsT = typeof(T).GetProperties();
-            var propsT1Names = typeof(T1).GetProperties().Select(p => p.Name);
-            foreach (var prop in propsT)
-            {
-                if (propsT1Names.Contains(prop.Name))
-                {
-                    prop.SetValue(instance, prop.GetValue(entity));
-                }
-            }
-            Add(instance);
-        }
-
         private T GetById(int id)
         {
             return Layer.Find(id);
         }
 
-        private void Add(T entity)
+        public void Add(T1 entity)
         {
-            DbEntityEntry dbEntityEntry = Entry(entity);
+            var instance = Convert(entity);
+            DbEntityEntry dbEntityEntry = Entry(instance);
             if (dbEntityEntry.State != EntityState.Detached)
             {
                 dbEntityEntry.State = EntityState.Added;
             }
             else
             {
-                Layer.Add(entity);
+                Layer.Add(instance);
             }
         }
 
@@ -99,6 +85,16 @@ namespace SInnovations.Gis.VectorTiles.Layers
                 Layer.Remove(entity);
             }
         }
+        public void Update(T1 entity)
+        {
+            var instance = Convert(entity);
+            DbEntityEntry dbEntityEntry = Entry(instance);
+            if (dbEntityEntry.State == EntityState.Detached)
+            {
+                Layer.Attach(instance);
+            }
+            dbEntityEntry.State = EntityState.Modified;
+        }
 
         public void Delete(int id)
         {
@@ -112,5 +108,20 @@ namespace SInnovations.Gis.VectorTiles.Layers
             return base.SaveChanges();
         } 
         
+        private T Convert(T1 entity)
+        {
+            var instance = Activator.CreateInstance(typeof(T)) as T;
+            var propsT = typeof(T).GetProperties();
+            var propsT1Names = typeof(T1).GetProperties().Select(p => p.Name);
+            foreach (var prop in propsT)
+            {
+                if (propsT1Names.Contains(prop.Name))
+                {
+                    prop.SetValue(instance, prop.GetValue(entity));
+                }
+            }
+
+            return instance;
+        }
     }
 }
