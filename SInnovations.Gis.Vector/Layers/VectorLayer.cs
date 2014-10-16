@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.Data.Entity;
 using System.Data.Entity.Spatial;
@@ -7,7 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SInnovations.Gis.VectorTiles.Layers
+namespace SInnovations.Gis.Vector.Layers
 {
     public static  class VectorLayerHelperExtensions
     {
@@ -24,6 +26,7 @@ namespace SInnovations.Gis.VectorTiles.Layers
     {
         private string tableName;
         private string idColumn;
+        private JsonSerializerSettings settings;
      //   private string geomName;
         public VectorLayer(string conn, string tableName, string idColumn, string geom)
             : base(conn)
@@ -31,7 +34,10 @@ namespace SInnovations.Gis.VectorTiles.Layers
             this.tableName = tableName;
             this.idColumn = idColumn;
             this.GeomColumn = geom;
-
+            this.settings = new JsonSerializerSettings();
+            settings.Converters.Add(new DbGeographyGeoJsonConverter());
+            settings.Converters.Add(new OgrEntityConverter());
+         
         }
         public string GeomColumn { get; set; }
         
@@ -52,5 +58,14 @@ namespace SInnovations.Gis.VectorTiles.Layers
             return Layer.Where(c => c.Geometry.Intersects(bbox));
         }
         
+   
+        public void Add(JToken obj)
+        {
+            if(obj.Type == JTokenType.Array)
+                Layer.AddRange(obj.ToObject<T[]>(JsonSerializer.Create(settings)));
+            else
+                Layer.Add(obj.ToObject<T>(JsonSerializer.Create(settings)));
+        }
+      
     }
 }

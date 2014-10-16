@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SInnovations.Gis.VectorTiles.EntityFramework
+namespace SInnovations.Gis.Vector.EntityFramework
 {
     /// <summary>
     /// Entity that can be used to query tables in a MS SQL database usign the build in 

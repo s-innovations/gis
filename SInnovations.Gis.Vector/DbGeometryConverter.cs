@@ -10,7 +10,7 @@ using Microsoft.SqlServer.Types;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace SInnovations.Gis.VectorTiles
+namespace SInnovations.Gis.Vector
 {
 
 
@@ -1901,14 +1901,14 @@ namespace SInnovations.Gis.VectorTiles
         {
             if (typeof(OgrEntity).IsAssignableFrom(objectType))
                 return true;
-        //    else if (typeof(DbGeometry).IsAssignableFrom(objectType))
-        //        return true;
+            //    else if (typeof(DbGeometry).IsAssignableFrom(objectType))
+            //        return true;
             else if (typeof(IEnumerable<OgrEntity>).IsAssignableFrom(objectType))
                 return true;
-                    return false;
+            return false;
         }
-       
-       
+
+
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
             var entity = value as OgrEntity;
@@ -1916,14 +1916,14 @@ namespace SInnovations.Gis.VectorTiles
             if (entity != null)
             {
                 writer.WriteStartObject();
-                    writer.WritePropertyName("type"); writer.WriteValue("feature");
-                    writer.WritePropertyName("geometry"); serializer.Serialize(writer, entity.Geometry);
-                    writer.WritePropertyName("properties");
-                       // writer.WriteStartObject();
-                          //  serializer.Serialize(writer, entity);
-                            var child = JsonSerializer.Create();
-                            child.Serialize(writer, entity);
-                      //  writer.WriteEndObject();
+                writer.WritePropertyName("type"); writer.WriteValue("feature");
+                writer.WritePropertyName("geometry"); serializer.Serialize(writer, entity.Geometry);
+                writer.WritePropertyName("properties");
+                // writer.WriteStartObject();
+                //  serializer.Serialize(writer, entity);
+                var child = JsonSerializer.Create();
+                child.Serialize(writer, entity);
+                //  writer.WriteEndObject();
                 writer.WriteEndObject();
 
 
@@ -1939,28 +1939,28 @@ namespace SInnovations.Gis.VectorTiles
 
 
                 // Base serialization is fine
-            //    serializer.Serialize(writer, geoFeature);
+                //    serializer.Serialize(writer, geoFeature);
                 return;
             }
             var geometry = value as DbGeometry;
-            if(geometry!=null)
+            if (geometry != null)
             {
                 writer.WriteStartObject();
-                    writer.WritePropertyName("type"); writer.WriteValue(geometry.SpatialTypeName);  
-             //       writer.writ
+                writer.WritePropertyName("type"); writer.WriteValue(geometry.SpatialTypeName);
+                //       writer.writ
                 writer.WriteEndObject();
                 return;
             }
             var features = value as IEnumerable<OgrEntity>;
-            if(features!=null)
+            if (features != null)
             {
                 writer.WriteStartObject();
-                    writer.WritePropertyName("type"); writer.WriteValue("FeatureCollection");
-                    writer.WritePropertyName("features"); 
-                        writer.WriteStartArray();
-                        foreach (var el in features)
-                            serializer.Serialize(writer, el);
-                        writer.WriteEndArray();
+                writer.WritePropertyName("type"); writer.WriteValue("FeatureCollection");
+                writer.WritePropertyName("features");
+                writer.WriteStartArray();
+                foreach (var el in features)
+                    serializer.Serialize(writer, el);
+                writer.WriteEndArray();
                 writer.WriteEndObject();
             }
 
@@ -1968,7 +1968,31 @@ namespace SInnovations.Gis.VectorTiles
 
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
-            throw new NotImplementedException();
+            JToken jsonToken = JToken.Load(reader);
+            var jsonObject = jsonToken as JObject;
+            var jsonArray = jsonToken as JArray;
+
+            if (typeof(IEnumerable<OgrEntity>).IsAssignableFrom(objectType))
+                if (jsonObject != null)
+                {
+                    var features = jsonObject.GetValue("features");
+                    return features.ToObject(objectType, serializer);
+                }
+                else if (jsonArray != null)
+                {
+                    //TODO, not working yet with COllection. Will fix later.
+                    var itemType = objectType.IsArray ? objectType.GetElementType():objectType.GenericTypeArguments.First();
+                    return jsonArray.ToObject(itemType, serializer);
+                }
+
+
+            var geom = jsonObject.GetValue("geometry");
+            var dbGeom = geom.ToObject<DbGeometry>(serializer);
+            var probs = jsonObject.GetValue("properties");
+
+            var obj = probs.ToObject(objectType) as OgrEntity;
+            obj.Geometry = dbGeom;
+            return obj;
         }
     }
 }
