@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SInnovations.Gis.VectorTiles.Layers
+namespace SInnovations.Gis.Vector.Layers
 {
     public interface ILayerContext : ILayerContext<OgrEntity>
     {

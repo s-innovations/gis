@@ -1,5 +1,5 @@
-﻿using SInnovations.Gis.VectorTiles.EntityFramework;
-using SInnovations.Gis.VectorTiles.Layers;
+﻿using SInnovations.Gis.Vector.EntityFramework;
+using SInnovations.Gis.Vector.Layers;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -11,7 +11,7 @@ using System.Reflection.Emit;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SInnovations.Gis.VectorTiles
+namespace SInnovations.Gis.Vector
 {
 
     public class MsSQLContext : DbContext

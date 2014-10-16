@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SInnovations.Gis.VectorTiles
+namespace SInnovations.Gis.Vector
 {
     /// <summary>
     /// The base entity for OGR2OGR MS SQL feature layer table.

@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SInnovations.Gis.VectorTiles.EntityFramework
+namespace SInnovations.Gis.Vector.EntityFramework
 {
     [Table("geometry_columns")]
     public class GeometryColumn
