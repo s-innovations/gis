@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.Data.Entity.Spatial;
 using System.Linq;
@@ -17,5 +18,6 @@ namespace SInnovations.Gis.Vector.Layers
         void Add(T entity);
         void Delete(int id);
         void Update(T entity);
+        void Add(JToken obj);
     }
 }
