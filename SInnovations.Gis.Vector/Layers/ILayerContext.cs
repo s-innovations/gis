@@ -13,6 +13,7 @@ namespace SInnovations.Gis.Vector.Layers
     }
     public interface ILayerContext<T> : IDisposable
     {
+        string LayerName { get; set; }
         IQueryable<T> GetRegion(DbGeometry bbox);
         int SaveChanges();
         void Add(T entity);

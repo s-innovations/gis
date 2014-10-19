@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("SInnovations.Gis.TileGrid")]
-[assembly: AssemblyDescription("A c# tilegrid port of OpenLayers 3 javascript base with a few TPL Dataflow extensions")]
+[assembly: AssemblyTitle("SInnovations.Gis.OgrHelpers")]
+[assembly: AssemblyDescription("A helper library to execute Ogr/Gdal Command line tools form C#")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("S-Innovations v/Poul Kjeldager Sørensen")]
-[assembly: AssemblyProduct("SInnovations.Gis.TileGrid")]
+[assembly: AssemblyProduct("SInnovations.Gis.OgrHelpers")]
 [assembly: AssemblyCopyright("Copyright ©  2014")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("cbd53bbc-8281-4542-a0f0-945ebb480cb8")]
+[assembly: Guid("2562fc67-59cc-4861-935a-be6d4a52f538")]
 
 // Version information for an assembly consists of the following four values:
 //

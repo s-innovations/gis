@@ -60,12 +60,19 @@
     <Compile Include="Layers\ILayerContext.cs" />
     <Compile Include="Layers\VectorLayer.cs" />
     <Compile Include="MsSQLContext.cs" />
+    <Compile Include="OgrDataSource.cs" />
     <Compile Include="OgrEntity.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SInnovations.Gis.OgrHelpers\SInnovations.Gis.OgrHelpers.csproj">
+      <Project>{a81cb465-2fd0-4ce7-af77-9a18d50f7410}</Project>
+      <Name>SInnovations.Gis.OgrHelpers</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
