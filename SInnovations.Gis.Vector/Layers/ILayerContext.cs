@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.Data.Entity.Spatial;
 using System.Linq;
@@ -14,5 +15,10 @@ namespace SInnovations.Gis.Vector.Layers
     {
         string LayerName { get; set; }
         IQueryable<T> GetRegion(DbGeometry bbox);
+        int SaveChanges();
+        void Add(T entity);
+        void Delete(int id);
+        void Update(T entity);
+        void Add(JToken obj);
     }
 }

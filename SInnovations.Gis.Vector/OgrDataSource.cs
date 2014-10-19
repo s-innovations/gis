@@ -46,7 +46,34 @@ namespace SInnovations.Gis.Vector
         {
             throw new NotImplementedException();
         }
+
+
+        public int SaveChanges()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Add(T entity)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Delete(int id)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Update(T entity)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Add(Newtonsoft.Json.Linq.JToken obj)
+        {
+            throw new NotImplementedException();
+        }
     }
+
     public class OgrDataSource : IDataSource
     {
 

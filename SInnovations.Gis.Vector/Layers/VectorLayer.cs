@@ -3,6 +3,7 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Data.Entity;
+using System.Data.Entity.Infrastructure;
 using System.Data.Entity.Spatial;
 using System.Data.Entity.SqlServer;
 using System.Linq;
@@ -40,7 +41,7 @@ namespace SInnovations.Gis.Vector.Layers
             this.settings = new JsonSerializerSettings();
             settings.Converters.Add(new DbGeographyGeoJsonConverter());
             settings.Converters.Add(new OgrEntityConverter());
-         
+
         }
 
         public string LayerName { get; set; }
@@ -63,7 +64,77 @@ namespace SInnovations.Gis.Vector.Layers
         {
             return Layer.Where(c => c.Geometry.Intersects(bbox));
         }
+
+        private T GetById(int id)
+        {
+            return Layer.Find(id);
+        }
+
+        public void Add(T1 entity)
+        {
+            var instance = Convert(entity);
+            DbEntityEntry dbEntityEntry = Entry(instance);
+            if (dbEntityEntry.State != EntityState.Detached)
+            {
+                dbEntityEntry.State = EntityState.Added;
+            }
+            else
+            {
+                Layer.Add(instance);
+            }
+        }
         
+        private void Delete(T entity)
+        {
+            DbEntityEntry dbEntityEntry = Entry(entity);
+            if (dbEntityEntry.State != EntityState.Deleted)
+            {
+                dbEntityEntry.State = EntityState.Deleted;
+            }
+            else
+            {
+                Layer.Attach(entity);
+                Layer.Remove(entity);
+            }
+        }
+        public void Update(T1 entity)
+        {
+            var instance = Convert(entity);
+            DbEntityEntry dbEntityEntry = Entry(instance);
+            if (dbEntityEntry.State == EntityState.Detached)
+            {
+                Layer.Attach(instance);
+            }
+            dbEntityEntry.State = EntityState.Modified;
+        }
+
+        public void Delete(int id)
+        {
+            var entity = GetById(id);
+            if (entity == null) return;
+            Delete(entity);
+        }
+
+        public override int SaveChanges()
+        {
+            return base.SaveChanges();
+        } 
+        
+        private T Convert(T1 entity)
+        {
+            var instance = Activator.CreateInstance(typeof(T)) as T;
+            var propsT = typeof(T).GetProperties();
+            var propsT1Names = typeof(T1).GetProperties().Select(p => p.Name);
+            foreach (var prop in propsT)
+            {
+                if (propsT1Names.Contains(prop.Name))
+                {
+                    prop.SetValue(instance, prop.GetValue(entity));
+                }
+            }
+
+            return instance;
+        }
    
         public void Add(JToken obj)
         {
