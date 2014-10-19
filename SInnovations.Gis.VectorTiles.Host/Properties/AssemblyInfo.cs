@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("SInnovations.Gis.TileGrid")]
-[assembly: AssemblyDescription("A c# tilegrid port of OpenLayers 3 javascript base with a few TPL Dataflow extensions")]
+[assembly: AssemblyTitle("SInnovations.Gis.VectorTiles.Host")]
+[assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("S-Innovations v/Poul Kjeldager Sørensen")]
-[assembly: AssemblyProduct("SInnovations.Gis.TileGrid")]
+[assembly: AssemblyCompany("")]
+[assembly: AssemblyProduct("SInnovations.Gis.VectorTiles.Host")]
 [assembly: AssemblyCopyright("Copyright ©  2014")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("cbd53bbc-8281-4542-a0f0-945ebb480cb8")]
+[assembly: Guid("cf18eb8e-4b47-4578-888d-2354a594aead")]
 
 // Version information for an assembly consists of the following four values:
 //
@@ -34,4 +34,3 @@ using System.Runtime.InteropServices;
 // [assembly: AssemblyVersion("1.0.*")]
 [assembly: AssemblyVersion("1.0.0.0")]
 [assembly: AssemblyFileVersion("1.0.0.0")]
-[assembly: AssemblyInformationalVersion("1.0.0")]

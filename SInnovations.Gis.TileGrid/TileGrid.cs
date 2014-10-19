@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Threading.Tasks.Dataflow;
 
 namespace SInnovations.Gis.TileGrid
 {
@@ -14,7 +15,71 @@ namespace SInnovations.Gis.TileGrid
     
         public  int MinZoom { get; set; }
     
-public  IList<int> Resolutions { get; set; }}
+        public  double[] Resolutions { get; set; }
+        public double[] Extent { get; set; }
+
+
+        public int? MaxZoom { get; set; }
+    }
+
+    public class CoordinateTreeWalker : IPropagatorBlock<TileRange,TileRange>
+    {
+        public IPropagatorBlock<int[], TileRange>[] coords { get; set; }
+        public IPropagatorBlock<TileRange, int[]>[] tiles { get; set; }
+
+        public DataflowMessageStatus OfferMessage(DataflowMessageHeader messageHeader, TileRange messageValue, ISourceBlock<TileRange> source, bool consumeToAccept)
+        {
+            return block.OfferMessage(messageHeader, messageValue, source, consumeToAccept);
+        }
+
+        //public override string ToString()
+        //{
+        //    var builder = new StringBuilder();
+        //    for(var i = 0; i< coords.Length;++i)
+        //    {
+        //        builder.AppendLine(string.Format("{0}",tiles[i].))
+        //    }
+        //    return builder.ToString();
+        //}
+
+        public void Complete()
+        {
+            block.Complete();
+        }
+
+        public Task Completion
+        {
+            get { return block.Completion; }
+        }
+
+        public void Fault(Exception exception)
+        {
+            block.Fault(exception);
+        }
+
+        public TileRange ConsumeMessage(DataflowMessageHeader messageHeader, ITargetBlock<TileRange> target, out bool messageConsumed)
+        {
+            return block.ConsumeMessage(messageHeader, target, out messageConsumed);
+        }
+
+        public IDisposable LinkTo(ITargetBlock<TileRange> target, DataflowLinkOptions linkOptions)
+        {
+            return block.LinkTo(target, linkOptions);
+        }
+
+        public void ReleaseReservation(DataflowMessageHeader messageHeader, ITargetBlock<TileRange> target)
+        {
+            block.ReleaseReservation(messageHeader, target);
+        }
+
+        public bool ReserveMessage(DataflowMessageHeader messageHeader, ITargetBlock<TileRange> target)
+        {
+            return block.ReserveMessage(messageHeader, target);
+        }
+
+        public IPropagatorBlock<TileRange, TileRange> block { get; set; }
+    }
+
     public abstract class TileGrid
     {
         private double[] _origin { get; set; }
@@ -24,19 +89,20 @@ public  IList<int> Resolutions { get; set; }}
 
         protected int MinZoom { get; set; }
         protected int MaxZoom { get; set; }
-        protected IList<int> Resolutions { get; set; }
+        protected double[] Resolutions { get; set; }
 
 
         public TileGrid(TileGridOptions options)
         {
            MinZoom = options.MinZoom;
            Resolutions = options.Resolutions;
-           MaxZoom = Resolutions.Count -1;
+           MaxZoom =  options.MaxZoom?? Resolutions.Length -1;
            _origin = options.Origin;
+           _tileSize = 256;
         }
 
 
-        public abstract Func<int[], ProjectionInfo, int[]> CreateTileCoordTransform();
+        public abstract Func<int[], ProjectionInfo, int[],int[]> CreateTileCoordTransform();
 
         public double[] GetOrigin(int z){
           
@@ -59,6 +125,36 @@ public  IList<int> Resolutions { get; set; }}
           return this.Resolutions[z];
         }
 
+
+
+        /**
+         * Create a resolutions array from an extent.  A zoom factor of 2 is assumed.
+         * @param {ol.Extent} extent Extent.
+         * @param {number=} opt_maxZoom Maximum zoom level (default is
+         *     ol.DEFAULT_MAX_ZOOM).
+         * @param {number=} opt_tileSize Tile size (default uses ol.DEFAULT_TILE_SIZE).
+         * @return {!Array.<number>} Resolutions array.
+         */
+        public static double[] ResolutionsFromExtent(double[] extent, int maxZoom=31, int tileSize=256) {
+         
+
+          var height =Extent.GetHeight(extent);
+          var width = Extent.GetWidth(extent);
+
+          var maxResolution = Math.Max(
+              width / tileSize, height / tileSize);
+
+          var length = maxZoom + 1;
+          var resolutions = new double[length];
+          for (var z = 0; z < length; ++z) {
+            resolutions[z] = maxResolution /  (1 << z) ;//Math.pow(2, z);
+          }
+          return resolutions;
+        }
+
+
+
+
         /**
          * @param {number} z Z.
          * @return {number} Tile size.
@@ -79,7 +175,7 @@ public  IList<int> Resolutions { get; set; }}
          * @param {ol.Extent=} opt_extent Temporary ol.Extent object.
          * @return {ol.Extent} Extent.
          */
-        public double[] GetTileRangeExtent(int z, TileRange tileRange, double[] opt_extent) {
+        public double[] GetTileRangeExtent(int z, TileRange tileRange, double[] opt_extent =null) {
           var origin = this.GetOrigin(z);
           var resolution = this.GetResolution(z);
           var tileSize = this.GetTileSize(z);
@@ -95,7 +191,8 @@ public  IList<int> Resolutions { get; set; }}
          */
         public int GetZForResolution(double resolution) {
         //  return ol.array.linearFindNearest(this.Resolutions, resolution, 0);
-           var idx = Array.BinarySearch(this.Resolutions.ToArray(),resolution);
+            var resol = this.Resolutions.Reverse().ToArray();
+            var idx = resol.Length- Array.BinarySearch(resol, resolution)-1;
             if (idx < 0){
                 idx = ~idx;
                 return this.Resolutions[idx]-resolution < resolution - this.Resolutions[idx-1] ? idx:idx-1;
@@ -130,7 +227,7 @@ public  IList<int> Resolutions { get; set; }}
             tileCoordY = Math.Floor(tileCoordY);
           }
 
-          return TileCoord.CreateOrUpdate(z, tileCoordX, tileCoordY, opt_tileCoord);
+          return TileCoord.CreateOrUpdate(z, (int)tileCoordX,(int) tileCoordY, opt_tileCoord);
         }
 
         /**
@@ -177,7 +274,22 @@ public  IList<int> Resolutions { get; set; }}
           return Extent.CreateOrUpdate(minX, minY, maxX, maxY, opt_extent);
         }
 
-        public bool ForEachTileCoordParentTileRange(int[] tileCoord, Func<int,TileRange,bool> callback, TileRange opt_tileRange = null, double[] opt_extent=null) 
+        /**
+         * @param {ol.TileCoord} tileCoord Tile coordinate.
+         * @param {ol.TileRange=} opt_tileRange Temporary ol.TileRange object.
+         * @param {ol.Extent=} opt_extent Temporary ol.Extent object.
+         * @return {ol.TileRange} Tile range.
+         */
+        public virtual TileRange GetTileCoordChildTileRange (int[] tileCoord, TileRange opt_tileRange=null, double[] opt_extent=null) {
+          if (tileCoord[0] < this.MaxZoom) {
+            var tileCoordExtent = this.GetTileCoordExtent(tileCoord, opt_extent);
+            return this.GetTileRangeForExtentAndZ(
+                tileCoordExtent, tileCoord[0] + 1, opt_tileRange);
+          } else {
+            return null;
+          }
+        }
+       public virtual bool ForEachTileCoordParentTileRange(int[] tileCoord, Func<int, TileRange, bool> callback, TileRange opt_tileRange = null, double[] opt_extent = null) 
         {
   
             var tileCoordExtent = this.GetTileCoordExtent(tileCoord, opt_extent);
@@ -192,5 +304,77 @@ public  IList<int> Resolutions { get; set; }}
             }
             return false;
         }
+
+        public IPropagatorBlock<TileRange,TileRange> CreateCoordinateTreeWalker(double[]originalExtent, 
+            Func<int[],int[],double[],Task> callback,int?startz=null,int?endz=null)
+       {
+           var minzoom = startz ?? MinZoom;
+           var maxzoom = (endz ?? MaxZoom);
+
+           var coords = new IPropagatorBlock<int[], TileRange>[maxzoom - minzoom + 1];
+           var tiles = new IPropagatorBlock<TileRange, int[]>[maxzoom - minzoom + 1];
+          
+            var coordTransform = CreateTileCoordTransform();
+            var to = ProjectionInfo.FromEpsgCode(3857);
+           Func<int[], Task<TileRange>> creator = async (coord) =>
+           {
+               var parentCoord = new int[] { coord[0] - 1, coord[1] >> 1, coord[2] >> 1 };
+               var xyz = coordTransform(coord, null, null);
+               var parentXYZ = coordTransform(parentCoord, null, null);
+             //  Console.WriteLine(String.Join(", ", xyz));
+               var tileExtent = GetTileCoordExtent(coord);
+
+
+               await callback(xyz, parentXYZ, tileExtent);
+               var range = GetTileCoordChildTileRange(coord);
+               return range;
+           };
+
+           var source = new BufferBlock<TileRange>();
+
+           for (int z = minzoom; z <= maxzoom; ++z)
+           {
+                //int zoom = z;
+               int zoomIdx = z - minzoom;
+               tiles[zoomIdx] = TileRange.CreateTileRangePropagatorBlock(z + 1, GetTileRangeForExtentAndZ(originalExtent, z + 1));
+               coords[zoomIdx] = new TransformBlock<int[], TileRange>(creator);
+               tiles[zoomIdx].LinkTo(coords[zoomIdx]);
+               tiles[zoomIdx].Completion.ContinueWith(delegate
+               {
+                   Console.WriteLine("Completing coords[{0}]", zoomIdx + minzoom);
+                   coords[zoomIdx].Complete();
+               });
+
+               if (z != minzoom)
+               {
+                   coords[zoomIdx - 1].LinkTo(tiles[zoomIdx]);
+                   coords[zoomIdx - 1].Completion.ContinueWith(delegate
+                   {
+                       Console.WriteLine("Completing tiles[{0}]", zoomIdx + minzoom);
+                       tiles[zoomIdx].Complete();
+                   });
+               }
+
+               if (z == maxzoom)
+               {
+                   coords[zoomIdx].LinkTo(source);
+                   coords[zoomIdx].Completion.ContinueWith(delegate
+                   {
+                       Console.WriteLine("Completing source[{0}]", zoomIdx + minzoom);
+                       source.Complete();
+                   });
+               }
+
+           }
+
+           return new CoordinateTreeWalker
+           {
+               coords = coords,
+               tiles = tiles,
+               block = DataflowBlock.Encapsulate(tiles[0], source)
+           };
+
+       }
+
     }
 }

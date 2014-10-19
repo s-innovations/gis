@@ -1897,6 +1897,7 @@ namespace SInnovations.Gis.Vector
 
     public class OgrEntityConverter : JsonConverter
     {
+        private bool doEnumerate = true;
         public override bool CanConvert(Type objectType)
         {
             if (typeof(OgrEntity).IsAssignableFrom(objectType))
@@ -1904,7 +1905,7 @@ namespace SInnovations.Gis.Vector
             //    else if (typeof(DbGeometry).IsAssignableFrom(objectType))
             //        return true;
             else if (typeof(IEnumerable<OgrEntity>).IsAssignableFrom(objectType))
-                return true;
+                return doEnumerate && true;
             return false;
         }
 
@@ -1980,9 +1981,11 @@ namespace SInnovations.Gis.Vector
                 }
                 else if (jsonArray != null)
                 {
-                    //TODO, not working yet with COllection. Will fix later.
-                    var itemType = objectType.IsArray ? objectType.GetElementType():objectType.GenericTypeArguments.First();
-                    return jsonArray.ToObject(itemType, serializer);
+   
+                    doEnumerate = false;
+                    var arr = jsonArray.ToObject(objectType,serializer);
+                    doEnumerate = true;
+                    return arr;
                 }
 
 
