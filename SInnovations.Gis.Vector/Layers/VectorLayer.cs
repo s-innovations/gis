@@ -24,21 +24,27 @@ namespace SInnovations.Gis.Vector.Layers
     }
     public class VectorLayer<T,T1> : DbContext, ILayerContext<T1> where T : OgrEntity ,T1
     {
-        private string tableName;
+      //  private string tableName;
         private string idColumn;
         private JsonSerializerSettings settings;
      //   private string geomName;
         public VectorLayer(string conn, string tableName, string idColumn, string geom)
             : base(conn)
         {
-            this.tableName = tableName;
+          //  this.tableName = tableName;
+            this.LayerName = tableName;
             this.idColumn = idColumn;
             this.GeomColumn = geom;
+
+            //Used for Deserialzation
             this.settings = new JsonSerializerSettings();
             settings.Converters.Add(new DbGeographyGeoJsonConverter());
             settings.Converters.Add(new OgrEntityConverter());
          
         }
+
+        public string LayerName { get; set; }
+
         public string GeomColumn { get; set; }
         
         public DbSet<T> Layer { get; set; }
@@ -47,7 +53,7 @@ namespace SInnovations.Gis.Vector.Layers
         {
             modelBuilder.Entity<T>().Property(t => t.Id).HasColumnName(this.idColumn);
             modelBuilder.Entity<T>().HasKey(t => t.Id);
-            modelBuilder.Entity<T>().ToTable(this.tableName);
+            modelBuilder.Entity<T>().ToTable(this.LayerName);
             modelBuilder.Entity<T>().Property(t => t.Geometry).HasColumnName(this.GeomColumn);
 
 

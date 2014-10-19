@@ -12,6 +12,7 @@ namespace SInnovations.Gis.Vector.Layers
     }
     public interface ILayerContext<T> : IDisposable
     {
+        string LayerName { get; set; }
         IQueryable<T> GetRegion(DbGeometry bbox);
     }
 }

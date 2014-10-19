@@ -4,28 +4,39 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Data;
 using System.Data.Entity;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Text;
 using System.Threading.Tasks;
+using PropertyAttributes = System.Reflection.PropertyAttributes;
 
 namespace SInnovations.Gis.Vector
 {
+    public interface IDataSource : IDisposable
+    {
+        ILayerContext<T> GetLayerContext<T>(string table);
+        ILayerContext<OgrEntity> GetLayerContext(string table);
+    }
 
-    public class MsSQLContext : DbContext
+
+
+    public class MsSQLContext : DbContext, IDataSource
     {
         private static ConcurrentDictionary<string, Tuple<Type, string, string>> types = new ConcurrentDictionary<string, Tuple<Type, string, string>>();
         private string conn;
-        public MsSQLContext(string conn)
+        private bool isSqlLite = false;
+        public MsSQLContext(string conn,bool isSqlLite=false)
             : base(conn)
         {
             this.conn = conn;
+            this.isSqlLite = isSqlLite;
            
         }
         public DbSet<GeometryColumn> GeometryColumns { get; set; }
-        public DbSet<TableColumn> Columns { get; set; }
+      //  public DbSet<TableColumn> Columns { get; set; }
 
         public ILayerContext<OgrEntity> GetLayerContext(string table)
         {
@@ -48,7 +59,16 @@ namespace SInnovations.Gis.Vector
                         "MyDynamicAssembly", "MyModule",key.Replace("_",""));
 
 
-                var tables = Columns.GroupBy(t => new { t.TableName, t.TableSchema }).ToArray();
+                Database.Connection.Open();
+                var colums = Database.Connection.GetSchema("Columns");
+               
+              //  var tables = Columns.GroupBy(t => new { t.TableName, t.TableSchema }).ToArray();
+                var tables = isSqlLite ? 
+                    colums.Rows.Cast<DataRow>().Select(SQLiteSchemaToEFColumn).GroupBy(t => new { t.TableName, t.TableSchema }).ToArray() :
+                    colums.Rows.Cast<DataRow>().Select(MSSQLSchemaToEFColumn).GroupBy(t => new { t.TableName, t.TableSchema }).ToArray();
+                
+
+                Database.Connection.Close();
 
 #if DEBUG
                 Console.WriteLine(string.Join("\n",
@@ -64,12 +84,12 @@ namespace SInnovations.Gis.Vector
                 foreach (var column in columns)
                 {
 
-                    if (column.DataType == "geometry")
+                    if (column.DataType.Equals("geometry", StringComparison.OrdinalIgnoreCase) || column.DataType.Equals("multipolygon", StringComparison.OrdinalIgnoreCase))
                     {
                         geom_column = column.ColumnName;
                         continue;
                     }
-                    else if (column.DataType == "int" && column.IsNullable == "NO" && id_column == null)
+                    else if (IsIdColumn(column) && id_column == null)
                     {
                         id_column = column.ColumnName;
                         continue;
@@ -89,6 +109,11 @@ namespace SInnovations.Gis.Vector
             var type = typeof(VectorLayer<,>).MakeGenericType(entity.Item1,typeof(T));
 
             return Activator.CreateInstance(type,this.conn, table, entity.Item2, entity.Item3) as ILayerContext<T>;
+        }
+
+        private static bool IsIdColumn(TableColumn column)
+        {
+            return (column.DataType == "int" || column.DataType == "integer") && !column.IsNullable;
         }
 
         private static TypeBuilder CreateTypeBuilder<T>(
@@ -163,7 +188,7 @@ namespace SInnovations.Gis.Vector
         }
 
 
-        private static System.Type dbtypetoclrtype(string p, string isnullable)
+        private static System.Type dbtypetoclrtype(string p, bool isnullable)
         {
 
             switch (p)
@@ -171,16 +196,43 @@ namespace SInnovations.Gis.Vector
                 case "varchar":
                     return typeof(string);
                 case "float":
-                    return isnullable == "YES" ? typeof(double?) : typeof(double);
+                    return isnullable ? typeof(double?) : typeof(double);
                 case "date":
-                    return isnullable == "YES" ? typeof(DateTime?) : typeof(DateTime);
+                    return isnullable ? typeof(DateTime?) : typeof(DateTime);
                 case "numeric":
-                    return isnullable == "YES" ? typeof(Decimal?) : typeof(Decimal);
+                    return isnullable? typeof(Decimal?) : typeof(Decimal);
                 case "int":
-                    return isnullable == "YES" ? typeof(int?) : typeof(int);
+                case "integer":
+                    return isnullable? typeof(int?) : typeof(int);
                 default:
                     return typeof(string);
             }
+        }
+        TableColumn SQLiteSchemaToEFColumn(DataRow row)
+        {
+            return new TableColumn
+            {
+                DataBaseName = row.Field<string>("TABLE_CATALOG"),
+                ColumnName = row.Field<string>("COLUMN_NAME"),
+                TableName = row.Field<string>("TABLE_NAME"),
+                DataType = row.Field<string>("DATA_TYPE"),
+                IsNullable = row.Field<bool>("IS_NULLABLE"),
+                TableSchema = row.Field<string>("TABLE_SCHEMA")
+
+            };
+        }
+        TableColumn MSSQLSchemaToEFColumn(DataRow row)
+        {
+            return new TableColumn
+            {
+                DataBaseName = row.Field<string>("TABLE_CATALOG"),
+                ColumnName = row.Field<string>("COLUMN_NAME"),
+                TableName = row.Field<string>("TABLE_NAME"),
+                DataType = row.Field<string>("DATA_TYPE"),
+                IsNullable = row.Field<string>("IS_NULLABLE").Equals("YES",StringComparison.OrdinalIgnoreCase),
+                TableSchema = row.Field<string>("TABLE_SCHEMA")
+
+            };
         }
     }
 }

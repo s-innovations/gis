@@ -1,6 +1,23 @@
 gis
 ===
 
+###Update
+
+I found a cross entity framework provider solution to dynamic looking up tables/layers (before i was relying on SQL server views) and was able to also use SQLite. But with SQLite there is need for creating a seperate implementation that deals with not having DbGeometry.
+
+Also added a command line host using OWIN to test out the tile generation. 
+
+Using a local database, you can import data with ogr2ogr.
+
+```
+C:\python\WinPython-64bit-2.7.6.4-gdal\python-2.7.6.amd64>%GDAL%\ogr2ogr -f "MSSQLSpatial" "MSSQL:Server=np:\\.\pipe\LOCALDB#7EA881A9\tsql\query;Database=ogr2ogrtestdb;" "C:\dev\DK_SHAPE_UTM32-EUREF89\MINIMAKS\BASIS\JORDSTYKKE_sonderborg.shp" -t_srs epsg:25832 -overwrite -progress -nln sonderborg_matrikelkort -skipfailures
+```
+and add a spatial index
+```
+C:\python\WinPython-64bit-2.7.6.4-gdal\python-2.7.6.amd64>%GDAL%\ogrinfo -sql "create spatial index on sonderborg_matrikelkort" "MSSQL:Server=np:\\.\pipe\LOCALDB#7EA881A9\tsql\query;Database=ogr2ogrtestdb"
+```
+
+### Original
 My little gis utility project in C#
 
 

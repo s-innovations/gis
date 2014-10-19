@@ -8,6 +8,15 @@ using System.Threading.Tasks;
 
 namespace SInnovations.Gis.Vector.EntityFramework
 {
+    // It seems that this need a cross provider solution.
+//    geometry_columns
+//        {"DataBaseName":"main","ColumnName":"f_table_name","TableName":"geometry_columns","TableSchema":"sqlite_default_schema","IsNullable":false,"DataType":"text"}
+//        {"DataBaseName":"main","ColumnName":"f_geometry_column","TableName":"geometry_columns","TableSchema":"sqlite_default_schema","IsNullable":false,"DataType":"text"}
+//        {"DataBaseName":"main","ColumnName":"type","TableName":"geometry_columns","TableSchema":"sqlite_default_schema","IsNullable":false,"DataType":"text"}
+//        {"DataBaseName":"main","ColumnName":"coord_dimension","TableName":"geometry_columns","TableSchema":"sqlite_default_schema","IsNullable":false,"DataType":"text"}
+//        {"DataBaseName":"main","ColumnName":"srid","TableName":"geometry_columns","TableSchema":"sqlite_default_schema","IsNullable":false,"DataType":"integer"}
+//        {"DataBaseName":"main","ColumnName":"spatial_index_enabled","TableName":"geometry_columns","TableSchema":"sqlite_default_schema","IsNullable":false,"DataType":"integer"}
+
     [Table("geometry_columns")]
     public class GeometryColumn
     {
