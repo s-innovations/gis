@@ -28,12 +28,7 @@ namespace SInnovations.Gis.Vector.Projections
         }
         public int? CoordinateSystem { get; set; }
 
-
-        protected override int? GetCoordinateSystem(Newtonsoft.Json.Linq.JObject jsonObject)
-        {
-            return CoordinateSystem;
-        }
-
+       
         public class EpgsPolygon : Polygon
         {
             public override void ParseJson(DbGeographyGeoJsonConverter converter, Newtonsoft.Json.Linq.JArray array)
@@ -45,6 +40,9 @@ namespace SInnovations.Gis.Vector.Projections
                     base.ParseJson(converter, array);
                     return;
                 }
+
+                
+
                 Rings = new List<List<Position>>();
                 var rings = array.ToObject<double[][][]>();
 
@@ -62,7 +60,7 @@ namespace SInnovations.Gis.Vector.Projections
                         ringList.Add(new Position(flat.Skip(i).Take(coordinateLength).ToArray()));
                     Rings.Add(ringList);
                 }
-                
+                CoordinateSystem = targetCoordinateSystem;
 
             }
         }

@@ -4,11 +4,9 @@ using System.Data.Entity.Spatial;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
-
-using Microsoft.SqlServer.Types;
-
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Microsoft.SqlServer.Types;
 
 namespace SInnovations.Gis.Vector
 {
@@ -169,6 +167,8 @@ namespace SInnovations.Gis.Vector
 
            
             geo.ParseJson(converter, geoObject.Value<JArray>());
+
+            coordinateSystem = geo.CoordinateSystem;
             return geo;
         }
 

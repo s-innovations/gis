@@ -78,12 +78,12 @@ namespace SInnovations.Gis.Tests
         [TestMethod]
         public void TeestMethod2()
         {
-            var json = @"{""boundingPolygon"":{""type"":""Polygon"",""coordinates"":[[[1252038.523311187,7530576.026655571],[1248063.7978403578,7547086.424765169],[1252038.523311187,7563291.074761626],[1281390.3421726946,7562985.326648485],[1300346.7251874185,7542500.203068058],[1332450.2770671924,7513454.132319691],[1333673.2695197552,7496026.489870671],[1331838.780840911,7483490.817231902],[1325112.3223518156,7476152.862516525],[1295454.7553771671,7485936.8021370275],[1274052.387457318,7501529.955907203],[1252038.523311187,7530576.026655571]]],""crs"":{""type"":""name"",""properties"":{""name"":""EPSG:3857""}}}}";
+            var json = @"{""boundingPolygon"":{""type"":""Polygon"",""coordinates"":[[[1254031.3317415663,7554983.1377011435],[1263356.6491923577,7557581.99666284],[1275739.4477745562,7553607.2711920105],[1286440.6317344808,7547645.182985767],[1297600.4378641166,7529453.170253895],[1294542.9567327097,7521350.845255666],[1294390.0826761392,7510955.409408882],[1299893.548712672,7504381.824976358],[1314110.8359737147,7494292.137242714],[1318849.9317273956,7496432.374034699],[1330315.485970172,7490776.033941596],[1335054.581723853,7485578.316018204],[1332455.722762157,7482520.834886797],[1325117.76804678,7483743.82733936],[1313040.7175777222,7484355.323565641],[1300352.170882383,7486495.560357626],[1291638.349657873,7497502.492430692],[1277268.1883402597,7512331.275918015],[1278949.8029625337,7527465.80751848],[1268707.24117232,7541835.968836093],[1259076.175608388,7545657.820250352],[1254031.3317415663,7554983.1377011435]]],""crs"":{""type"":""name"",""properties"":{""name"":""EPSG:3857""}}}}";
 
             var obj1 = JsonConvert.DeserializeObject<TestClass1>(json);
             Assert.AreEqual(3857, obj1.boundingPolygon.WellKnownValue.CoordinateSystemId);
             var obj2 = JsonConvert.DeserializeObject<TestClass2>(json);
-            Assert.AreEqual(3857, obj2.boundingPolygon.WellKnownValue.CoordinateSystemId);
+            Assert.AreEqual(4326, obj2.boundingPolygon.WellKnownValue.CoordinateSystemId);
             var obj3 = JsonConvert.DeserializeObject<TestClass3>(json);
             Assert.AreEqual(25832, obj3.boundingPolygon.WellKnownValue.CoordinateSystemId);
         }
@@ -95,7 +95,7 @@ namespace SInnovations.Gis.Tests
         }
         public class TestClass2
         {
-            [JsonConverter(typeof(EpsgDbGeometryConverter))]
+            [JsonConverter(typeof(EpsgDbGeometryConverter), 4326)]
             public DbGeometry boundingPolygon { get; set; }
         }
         public class TestClass3

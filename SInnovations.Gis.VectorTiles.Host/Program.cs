@@ -8,7 +8,6 @@ using SInnovations.Gis.Vector;
 using SInnovations.Gis.VectorTiles.Host.Owin;
 using System;
 using System.Collections.Generic;
-using System.Data.SqlServerCe;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
