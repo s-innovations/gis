@@ -103,5 +103,16 @@ namespace SInnovations.Gis.TileGrid
        public bool ContainsXY(int x, int y) {
           return this.MinX <= x && x <= this.MaxX && this.MinY <= y && y <= this.MaxY;
         }
+
+       public IEnumerable<TileRange> Split(int xtarget, int ytarget)
+       {
+          for(int x = MinX;x<=MaxX;x+=xtarget+1)
+          {
+              for(int y = MinY;y<=MaxY;y+=ytarget+1)
+              {
+                  yield return new TileRange(x, x + xtarget, y, y + ytarget);
+              }
+          }
+       }
     }
 }

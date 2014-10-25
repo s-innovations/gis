@@ -20,7 +20,8 @@ namespace SInnovations.Gis.TileGrid
 
 
         public int? MaxZoom { get; set; }
-    }
+    
+public  int TileSize { get; set; }}
 
     public class CoordinateTreeWalker : IPropagatorBlock<TileRange,TileRange>
     {
@@ -80,7 +81,7 @@ namespace SInnovations.Gis.TileGrid
         public IPropagatorBlock<TileRange, TileRange> block { get; set; }
     }
 
-    public abstract class TileGrid
+    public class TileGrid
     {
         private double[] _origin { get; set; }
         private IList<double[]> _origins { get; set; }
@@ -102,7 +103,10 @@ namespace SInnovations.Gis.TileGrid
         }
 
 
-        public abstract Func<int[], ProjectionInfo, int[],int[]> CreateTileCoordTransform();
+        public virtual Func<int[], ProjectionInfo, int[], int[]> CreateTileCoordTransform()
+        {
+            return null;
+        }
 
         public double[] GetOrigin(int z){
           
@@ -126,6 +130,29 @@ namespace SInnovations.Gis.TileGrid
         }
 
 
+        /**
+ * @param {ol.Extent} extent Extent.
+ * @param {number=} opt_maxZoom Maximum zoom level (default is
+ *     ol.DEFAULT_MAX_ZOOM).
+ * @param {number=} opt_tileSize Tile size (default uses ol.DEFAULT_TILE_SIZE).
+ * @param {ol.extent.Corner=} opt_corner Extent corner (default is
+ *     ol.extent.Corner.BOTTOM_LEFT).
+ * @return {ol.tilegrid.TileGrid} TileGrid instance.
+ */
+        public static TileGrid CreateForExtent(double[] extent, int maxZoom=32, int tileSize=256, Extent.Corner corner=Extent.Corner.BottomLeft) {
+
+ 
+
+  var resolutions = TileGrid.ResolutionsFromExtent(
+      extent, maxZoom, tileSize);
+
+    return new TileGrid( new TileGridOptions{
+        Origin= Extent.GetCorner(extent, corner),
+        Resolutions= resolutions,
+        TileSize= tileSize
+        });
+    }
+
 
         /**
          * Create a resolutions array from an extent.  A zoom factor of 2 is assumed.
@@ -135,11 +162,12 @@ namespace SInnovations.Gis.TileGrid
          * @param {number=} opt_tileSize Tile size (default uses ol.DEFAULT_TILE_SIZE).
          * @return {!Array.<number>} Resolutions array.
          */
-        public static double[] ResolutionsFromExtent(double[] extent, int maxZoom=31, int tileSize=256) {
+        public static double[] ResolutionsFromExtent(double[] extent, int maxZoom=31, int tileSize=256, double basePow=2) {
          
 
           var height =Extent.GetHeight(extent);
           var width = Extent.GetWidth(extent);
+         
 
           var maxResolution = Math.Max(
               width / tileSize, height / tileSize);
@@ -147,7 +175,7 @@ namespace SInnovations.Gis.TileGrid
           var length = maxZoom + 1;
           var resolutions = new double[length];
           for (var z = 0; z < length; ++z) {
-            resolutions[z] = maxResolution /  (1 << z) ;//Math.pow(2, z);
+              resolutions[z] = maxResolution / Math.Pow(basePow, z);
           }
           return resolutions;
         }
@@ -190,6 +218,8 @@ namespace SInnovations.Gis.TileGrid
          * @return {number} Z.
          */
         public int GetZForResolution(double resolution) {
+
+            return this.Resolutions.Select((r, i) => new { r = Math.Abs(r - resolution), i }).OrderBy(r => r.r).First().i;
         //  return ol.array.linearFindNearest(this.Resolutions, resolution, 0);
             var resol = this.Resolutions.Reverse().ToArray();
             var idx = resol.Length- Array.BinarySearch(resol, resolution)-1;

@@ -72,17 +72,19 @@ namespace SInnovations.Gis.Vector
         /// <summary>
         /// The types derived from <see cref="GeoBase"/> accessed by name.
         /// </summary>
-        private static readonly Dictionary<string, Type> GeoBases =
-        new Dictionary<string, Type>
+        protected static readonly Dictionary<string, Func<GeoBase>> GeoBases =
+        new Dictionary<string, Func<GeoBase>> //CHange to ctor
 		{
-			{ "Point", typeof(Point) },
-			{ "LineString", typeof(LineString) },
-			{ "Polygon", typeof(Polygon) },
-			{ "MultiPoint", typeof(MultiPoint) },
-			{ "MultiLineString", typeof(MultiLineString) },
-			{ "MultiPolygon", typeof(MultiPolygon) },
-			{ "GeometryCollection", typeof(Collection) },
+			{ "Point", () => new Point() },
+			{ "LineString", () => new LineString() },
+			{ "Polygon", () => new Polygon() },
+			{ "MultiPoint", () => new MultiPoint() },
+			{ "MultiLineString", () => new MultiLineString() },
+			{ "MultiPolygon", () => new MultiPolygon() },
+			{ "GeometryCollection", () => new Collection() },
 		};
+
+
 
         /// <summary>
         /// The indexes per point.
@@ -123,7 +125,7 @@ namespace SInnovations.Gis.Vector
         /// <remarks>
         /// Leaves the reader positioned where the value should start.
         /// </remarks>
-        public static GeoBase ParseJsonObjectToGeoBase(JObject jsonObject, out int? coordinateSystem)
+        public static GeoBase ParseJsonObjectToGeoBase(DbGeographyGeoJsonConverter converter, JObject jsonObject, out int? coordinateSystem)
         {
             var type = jsonObject["type"];
             if (type == null)
@@ -136,7 +138,11 @@ namespace SInnovations.Gis.Vector
                 throw new ArgumentException(string.Format("Expected a string token for the type of the GeoJSON type, got {0}", type.Type), "jsonObject");
             }
 
-            Type geoType;
+            var crs = jsonObject["crs"];
+            coordinateSystem = crs != null ? converter.GetCoordinateSystem(crs.Value<JObject>()) : null;
+
+
+            Func<GeoBase> geoType;
             if (!GeoBases.TryGetValue(type.Value<string>(), out geoType))
             {
                 throw new ArgumentException(
@@ -147,24 +153,26 @@ namespace SInnovations.Gis.Vector
                 "jsonObject");
             }
 
-            var geoObject = geoType == typeof(Collection) ? jsonObject["geometries"] : jsonObject["coordinates"];
+            var geo = geoType();
+            geo.CoordinateSystem = coordinateSystem;
+            var isCollection = typeof(Collection).IsAssignableFrom(geo.GetType());
+            var geoObject = isCollection ? jsonObject["geometries"] : jsonObject["coordinates"];
             if (geoObject == null)
             {
                 throw new ArgumentException(
                 string.Format(
                 "Expected a field named \"{0}\", found [{1}]",
-                geoType == typeof(Collection) ? "geometries" : "coordinates",
+                isCollection ? "geometries" : "coordinates",
                 string.Join(", ", jsonObject.Properties().Select(p => p.Name))),
                 "jsonObject");
             }
 
-            var crs = jsonObject["crs"];
-            coordinateSystem = crs != null ? ParseCrs(crs.Value<JObject>()) : null;
-
-            var geo = (GeoBase)Activator.CreateInstance(geoType);
-            geo.ParseJson(geoObject.Value<JArray>());
+           
+            geo.ParseJson(converter, geoObject.Value<JArray>());
             return geo;
         }
+
+
 
         /// <inheritdoc/>
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
@@ -219,7 +227,7 @@ namespace SInnovations.Gis.Vector
             JObject jsonObject = JObject.Load(reader);
 
             // Create target object based on JObject
-            object target = CreateDbGeo(jsonObject, objectType);
+            object target = CreateDbGeo(this, jsonObject, objectType);
 
             // Populate the object properties
             serializer.Populate(jsonObject.CreateReader(), target);
@@ -242,7 +250,7 @@ namespace SInnovations.Gis.Vector
         /// <returns>
         /// The coordinate system value; null if couldn't parse it (only a couple EPSG-style values).
         /// </returns>
-        private static int? ParseCrs(JObject jsonObject)
+        protected virtual int? GetCoordinateSystem(JObject jsonObject)
         {
             var properties = jsonObject["properties"];
             if (properties != null && properties.Type == JTokenType.Object)
@@ -284,12 +292,12 @@ namespace SInnovations.Gis.Vector
         /// <exception cref="ArgumentException">
         /// Unexpected JSON.
         /// </exception>
-        private static Tuple<byte[], int> GetWellKnownBinary(JObject jsonObject, int defaultCoordinateSystemId)
+        private static Tuple<byte[], int> GetWellKnownBinary(DbGeographyGeoJsonConverter converter, JObject jsonObject, int defaultCoordinateSystemId)
         {
             var ob = new MemoryStream();
 
             int? coordinateSystemId;
-            var geoBase = ParseJsonObjectToGeoBase(jsonObject, out coordinateSystemId);
+            var geoBase = ParseJsonObjectToGeoBase(converter, jsonObject, out coordinateSystemId);
             geoBase.WellKnownBinary(ob);
             return new Tuple<byte[], int>(ob.ToArray(), coordinateSystemId.HasValue ? coordinateSystemId.Value : defaultCoordinateSystemId);
         }
@@ -953,7 +961,7 @@ namespace SInnovations.Gis.Vector
         /// <exception cref="ArgumentException">
         /// <paramref name="objectType"/> is not a <see cref="DbGeography"/> or <see cref="DbGeometry"/>.
         /// </exception>
-        private static object CreateDbGeo(JObject jsonObject, Type objectType)
+        private static object CreateDbGeo(DbGeographyGeoJsonConverter converter, JObject jsonObject, Type objectType)
         {
             Func<Tuple<byte[], int>, object> returnValue;
             int defaultCoordinateSystemId;
@@ -972,7 +980,7 @@ namespace SInnovations.Gis.Vector
                 throw new ArgumentException(string.Format("Expected a DbGeography or DbGeometry objectType. Got {0}", objectType.Name), "objectType");
             }
 
-            return jsonObject.Type == JTokenType.Null || jsonObject.Type == JTokenType.None ? null : returnValue(GetWellKnownBinary(jsonObject, defaultCoordinateSystemId));
+            return jsonObject.Type == JTokenType.Null || jsonObject.Type == JTokenType.None ? null : returnValue(GetWellKnownBinary(converter, jsonObject, defaultCoordinateSystemId));
         }
 
         /// <summary>
@@ -1045,6 +1053,7 @@ namespace SInnovations.Gis.Vector
         /// </summary>
         public abstract class GeoBase
         {
+           
             /// <summary>
             /// The point well-known bytes descriptor.
             /// </summary>
@@ -1150,6 +1159,9 @@ namespace SInnovations.Gis.Vector
             /// </summary>
             protected static readonly byte[] GeometryCollectionXyzmWkbs = BitConverter.GetBytes(GeometryCollectionWkb + 3000);
 
+
+            public int? CoordinateSystem { get; set; }
+
             /// <summary>
             /// Helper function to parse a <see cref="List{T}"/> of <see cref="Position"/>.
             /// </summary>
@@ -1246,7 +1258,7 @@ namespace SInnovations.Gis.Vector
             /// <param name="array">
             /// Get JSON from this.
             /// </param>
-            public abstract void ParseJson(JArray array);
+            public abstract void ParseJson(DbGeographyGeoJsonConverter converter, JArray array);
         }
 
         /// <summary>
@@ -1310,6 +1322,27 @@ namespace SInnovations.Gis.Vector
                     if (array.Count() > 3)
                     {
                         this.P4 = (double)array[3];
+                    }
+                }
+            }
+
+            public Position(double[] array)
+            {
+                if (array.Length < 2)
+                {
+                    throw new ArgumentException(
+                    string.Format("Expected at least 2 elements, got {0}", array.Length),
+                    "array");
+                }
+
+                this.P1 = array[0];
+                this.P2 = array[1];
+                if (array.Length > 2)
+                {
+                    this.P3 = array[2];
+                    if (array.Length > 3)
+                    {
+                        this.P4 = array[3];
                     }
                 }
             }
@@ -1408,7 +1441,7 @@ namespace SInnovations.Gis.Vector
             }
 
             /// <inheritdoc/>
-            public override void ParseJson(JArray array)
+            public override void ParseJson(DbGeographyGeoJsonConverter converter,JArray array)
             {
                 if (array.Count < 2)
                 {
@@ -1454,7 +1487,7 @@ namespace SInnovations.Gis.Vector
             }
 
             /// <inheritdoc/>
-            public override void ParseJson(JArray array)
+            public override void ParseJson(DbGeographyGeoJsonConverter converter,JArray array)
             {
                 this.Position = new Position(array);
             }
@@ -1484,7 +1517,7 @@ namespace SInnovations.Gis.Vector
             }
 
             /// <inheritdoc/>
-            public override void ParseJson(JArray array)
+            public override void ParseJson(DbGeographyGeoJsonConverter converter,JArray array)
             {
                 if (array.Cast<JArray>().Any(l => l.Count < 2))
                 {
@@ -1568,7 +1601,7 @@ namespace SInnovations.Gis.Vector
             }
 
             /// <inheritdoc/>
-            public override void ParseJson(JArray array)
+            public override void ParseJson(DbGeographyGeoJsonConverter converter,JArray array)
             {
                 this.Rings = GeoBase.ParseListListPosition(array);
             }
@@ -1642,7 +1675,7 @@ namespace SInnovations.Gis.Vector
             }
 
             /// <inheritdoc/>
-            public override void ParseJson(JArray array)
+            public override void ParseJson(DbGeographyGeoJsonConverter converter,JArray array)
             {
                 this.Points = GeoBase.ParseListPosition(array);
             }
@@ -1702,7 +1735,7 @@ namespace SInnovations.Gis.Vector
             }
 
             /// <inheritdoc/>
-            public override void ParseJson(JArray array)
+            public override void ParseJson(DbGeographyGeoJsonConverter converter,JArray array)
             {
                 this.LineStrings = GeoBase.ParseListListPosition(array);
             }
@@ -1795,7 +1828,7 @@ namespace SInnovations.Gis.Vector
             }
 
             /// <inheritdoc/>
-            public override void ParseJson(JArray array)
+            public override void ParseJson(DbGeographyGeoJsonConverter converter,JArray array)
             {
                 this.Polygons = GeoBase.ParseListListListPosition(array);
             }
@@ -1874,7 +1907,7 @@ namespace SInnovations.Gis.Vector
             }
 
             /// <inheritdoc/>
-            public override void ParseJson(JArray array)
+            public override void ParseJson(DbGeographyGeoJsonConverter converter, JArray array)
             {
                 this.Entries = new List<GeoBase>();
                 foreach (var elem in array)
@@ -1887,7 +1920,7 @@ namespace SInnovations.Gis.Vector
                     }
 
                     int? dummyCoordinateSystem;
-                    this.Entries.Add(DbGeographyGeoJsonConverter.ParseJsonObjectToGeoBase((JObject)elem, out dummyCoordinateSystem));
+                    this.Entries.Add(DbGeographyGeoJsonConverter.ParseJsonObjectToGeoBase(converter, (JObject)elem, out dummyCoordinateSystem));
                 }
             }
         }

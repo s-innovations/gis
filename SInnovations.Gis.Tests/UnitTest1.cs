@@ -5,6 +5,8 @@ using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
 using SInnovations.Gis.Vector.Layers;
 using System.Collections.Generic;
+using System.Data.Entity.Spatial;
+using SInnovations.Gis.Vector.Projections;
 
 namespace SInnovations.Gis.Tests
 {
@@ -73,6 +75,35 @@ namespace SInnovations.Gis.Tests
 
         }
 
+        [TestMethod]
+        public void TeestMethod2()
+        {
+            var json = @"{""boundingPolygon"":{""type"":""Polygon"",""coordinates"":[[[1252038.523311187,7530576.026655571],[1248063.7978403578,7547086.424765169],[1252038.523311187,7563291.074761626],[1281390.3421726946,7562985.326648485],[1300346.7251874185,7542500.203068058],[1332450.2770671924,7513454.132319691],[1333673.2695197552,7496026.489870671],[1331838.780840911,7483490.817231902],[1325112.3223518156,7476152.862516525],[1295454.7553771671,7485936.8021370275],[1274052.387457318,7501529.955907203],[1252038.523311187,7530576.026655571]]],""crs"":{""type"":""name"",""properties"":{""name"":""EPSG:3857""}}}}";
+
+            var obj1 = JsonConvert.DeserializeObject<TestClass1>(json);
+            Assert.AreEqual(3857, obj1.boundingPolygon.WellKnownValue.CoordinateSystemId);
+            var obj2 = JsonConvert.DeserializeObject<TestClass2>(json);
+            Assert.AreEqual(3857, obj2.boundingPolygon.WellKnownValue.CoordinateSystemId);
+            var obj3 = JsonConvert.DeserializeObject<TestClass3>(json);
+            Assert.AreEqual(25832, obj3.boundingPolygon.WellKnownValue.CoordinateSystemId);
+        }
+
+        public class TestClass1
+        {
+            [JsonConverter(typeof(DbGeographyGeoJsonConverter))]
+            public DbGeometry boundingPolygon { get; set; }
+        }
+        public class TestClass2
+        {
+            [JsonConverter(typeof(EpsgDbGeometryConverter))]
+            public DbGeometry boundingPolygon { get; set; }
+        }
+        public class TestClass3
+        {
+
+            [JsonConverterAttribute(typeof(EpsgDbGeometryConverter), 25832)]
+            public DbGeometry boundingPolygon { get; set; }
+        }
         //public void ThisCouldBeAWebAPIController(JToken json)
         //{
         //    VectorLayer<OgrEntity, OgrEntity> layer = null; //this is the VectorLayer<T,T1>

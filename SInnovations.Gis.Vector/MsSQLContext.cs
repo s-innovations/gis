@@ -21,8 +21,7 @@ namespace SInnovations.Gis.Vector
         ILayerContext<OgrEntity> GetLayerContext(string table);
     }
 
-
-
+   
     public class MsSQLContext : DbContext, IDataSource
     {
         private static ConcurrentDictionary<string, Tuple<Type, string, string>> types = new ConcurrentDictionary<string, Tuple<Type, string, string>>();
