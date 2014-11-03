@@ -33,7 +33,7 @@ namespace SInnovations.Gis.Tests
             var tilesize = 256 * resolution;
             
 
-          var range1 = grid.GetTileRangeForExtentAndResolution(ecwExtent, 0.10);
+            var range1 = grid.GetTileRangeForExtentAndResolution(ecwExtent, 0.10);
             var range2 = grid.GetTileRangeForExtentAndZ(ecwExtent,z);
 
             var xtiles = range1.MaxX - range1.MinX;

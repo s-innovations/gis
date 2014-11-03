@@ -7,6 +7,8 @@ using System.Threading.Tasks.Dataflow;
 
 namespace SInnovations.Gis.TileGrid
 {
+
+
    
     public class TileRange
     {
@@ -80,7 +82,7 @@ namespace SInnovations.Gis.TileGrid
 
         public int MaxY { get; set; }
 
-        internal static TileRange CreateOrUpdate(int minX, int maxX, int minY, int maxY, TileRange tileRange = null)
+        public static TileRange CreateOrUpdate(int minX, int maxX, int minY, int maxY, TileRange tileRange = null)
         {
             if (tileRange != null)
             {
@@ -104,15 +106,22 @@ namespace SInnovations.Gis.TileGrid
           return this.MinX <= x && x <= this.MaxX && this.MinY <= y && y <= this.MaxY;
         }
 
-       public IEnumerable<TileRange> Split(int xtarget, int ytarget)
+     
+        public IEnumerable<int[]> GetTiles(int z)
        {
-          for(int x = MinX;x<=MaxX;x+=xtarget+1)
-          {
-              for(int y = MinY;y<=MaxY;y+=ytarget+1)
-              {
-                  yield return new TileRange(x, x + xtarget, y, y + ytarget);
-              }
-          }
+           for (var x = MinX; x <= MaxX; x++)
+               for (var y = MinY; y <= MaxY; y++)
+                   yield return new int[] {z, x, y };
        }
+        public IEnumerable<TileRange> Split(int xtarget, int ytarget)
+        {
+            for (int x = MinX; x <= MaxX; x += xtarget + 1)
+            {
+                for (int y = MinY; y <= MaxY; y += ytarget + 1)
+                {
+                    yield return new TileRange(x, x + xtarget, y, y + ytarget);
+                }
+            }
+        }
     }
 }

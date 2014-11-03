@@ -16,7 +16,7 @@ namespace SInnovations.Gis.Vector
           
             LayerName = name;
 
-            ExtentAsync = source.OgrHelper.GetExtentAsync(source.Source, name);
+            ExtentAsync = source.OgrHelper.GetOgrExtentAsync(source.Source, name);
             Proj4TextAsync = source.OgrHelper.GetProj4TextAsync(source.Source, name);
         }
 
