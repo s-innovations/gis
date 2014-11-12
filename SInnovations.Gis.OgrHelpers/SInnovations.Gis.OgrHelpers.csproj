@@ -39,6 +39,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Models\GdalInfoResult.cs" />
     <Compile Include="OgrHelpers.cs" />
     <Compile Include="CmdWrapper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

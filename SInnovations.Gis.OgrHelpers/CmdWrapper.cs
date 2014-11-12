@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
@@ -41,14 +42,15 @@ namespace SInnovations.Gis.OgrHelpers
     public interface IEnvironmentVariablesProvider
     {
         string GetEnvironmentVariable(string key);
-        ICollection<string> EnvrionmentsVariables { get; }
+        IEnumerable<string> EnvrionmentsVariables { get; }
     }
     public class DefaultEnvironmentVariableProvider :  IEnvironmentVariablesProvider
     {
-        private IDictionary<string, string> _values;
-        public DefaultEnvironmentVariableProvider(IDictionary<string,string> values)
+        private IReadOnlyDictionary<string, string> _values;
+      
+        public DefaultEnvironmentVariableProvider(IReadOnlyDictionary<string, string> readOnlyValues)
         {
-            _values = values;
+            _values = readOnlyValues;
         }
         public string GetEnvironmentVariable(string key)
         {
@@ -57,13 +59,14 @@ namespace SInnovations.Gis.OgrHelpers
             return _values[key];
         }
 
-        public ICollection<string> EnvrionmentsVariables { get { return _values.Keys; } }
+        public IEnumerable<string> EnvrionmentsVariables { get { return _values.Keys; } }
     }
     public class AsyncProcess<T>
     {
 
         #region Extensions
         public IEnvironmentVariablesProvider EnvironmentVariables { get; set; }
+        public String WorkingFolder { get; set; }
         #endregion
 
         private StringBuilder _output;
@@ -94,6 +97,10 @@ namespace SInnovations.Gis.OgrHelpers
                 startInfo.UseShellExecute = false;
                 process.StartInfo = startInfo;
                 process.ErrorDataReceived += ErrorHandler;
+                if (WorkingFolder!=null)
+                {
+                    startInfo.WorkingDirectory = WorkingFolder;
+                }
 
                 if (EnvironmentVariables!=null)
                 {
@@ -103,7 +110,9 @@ namespace SInnovations.Gis.OgrHelpers
                         var value = EnvironmentVariables.GetEnvironmentVariable(key);
                         if (value != null)
                         {
-                            startInfo.EnvironmentVariables.Add(key, value);
+                         
+                                startInfo.EnvironmentVariables[key] = value;
+                            
                         }
                     }
                 }
