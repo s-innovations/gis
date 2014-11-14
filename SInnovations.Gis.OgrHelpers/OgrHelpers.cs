@@ -78,13 +78,15 @@ namespace SInnovations.Gis.OgrHelpers
             return process.RunAsync(string.Format(@" -input_file_list ""{0}"" ""{1}""", filelist, outputfile));  
         }
 
-        public Task<int> GdalExtractWithTranslate(string source,string target, string projwin, string outtype, int? outputsize = null)
+        public Task<int> GdalExtractWithTranslate(string source,string target, string projwin, string outtype, int? outputsize = null, params string[] createOptions)
         {
             var process = new AsyncProcess(@"%GDAL%\gdal_translate") { EnvironmentVariables = EnvironmentVariables, WorkingFolder = WorkingFolder };
             return process.RunAsync(string.Format(@" -of {2} {5} {4} -projwin {1} ""{0}"" ""{3}"" ", 
                 source, projwin, outtype,target, outputsize.HasValue ? 
                 string.Format("-outsize {0} {0}",outputsize.Value):"", 
-                (outtype=="gtiff") ? "-co COMPRESS=LZW -co PREDICTOR=2" : (outtype=="png"?"-co WORLDFILE=YES":"")));  
+                string.Join("", createOptions.Select(co => string.Format("-co {0}")))
+                ));  
+            //(outtype=="gtiff") ? "-co COMPRESS=LZW -co PREDICTOR=2" : (outtype=="png"?"-co WORLDFILE=YES":"")
         }
 
         public Task<int> Ogr2OgrClipAsync(string source,string target, string t_srs, double[] extent)
