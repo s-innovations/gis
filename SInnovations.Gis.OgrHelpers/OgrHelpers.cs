@@ -84,7 +84,7 @@ namespace SInnovations.Gis.OgrHelpers
             return process.RunAsync(string.Format(@" -of {2} {5} {4} -projwin {1} ""{0}"" ""{3}"" ", 
                 source, projwin, outtype,target, outputsize.HasValue ? 
                 string.Format("-outsize {0} {0}",outputsize.Value):"", 
-                string.Join("", createOptions.Select(co => string.Format("-co {0}")))
+                string.Join(" ", createOptions.Select(co => string.Format("-co {0}")))
                 ));  
             //(outtype=="gtiff") ? "-co COMPRESS=LZW -co PREDICTOR=2" : (outtype=="png"?"-co WORLDFILE=YES":"")
         }
