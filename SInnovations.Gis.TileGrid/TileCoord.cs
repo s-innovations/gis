@@ -8,7 +8,7 @@ namespace SInnovations.Gis.TileGrid
 {
     public static class TileCoord
     {
-        internal static int[] CreateOrUpdate(int z, int tileCoordX, int tileCoordY, int[] opt_tileCoord)
+        public static int[] CreateOrUpdate(int z, int tileCoordX, int tileCoordY, int[] opt_tileCoord)
         {
             if(opt_tileCoord !=null)
             {
