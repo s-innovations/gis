@@ -8,6 +8,7 @@ using SInnovations.Gis.Vector;
 using SInnovations.Gis.VectorTiles.Host.Owin;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -87,7 +88,7 @@ namespace SInnovations.Gis.VectorTiles.Host
 
         private static void TestWithSplittingLargeShapeFIle(ProgramOptions options, int z)
         {
-            var helper = new OgrHelper(new DefaultEnvironmentVariableProvider(
+            var helper = new OgrHelper(new DefaultEnvironmentVariableProvider( readOnlyValues:
                 new Dictionary<string, string>{
                { "gdal" , @"C:\python\WinPython-64bit-2.7.6.4-gdal\tools\gdal"},
                { "GDAL_DATA",@"C:\python\WinPython-64bit-2.7.6.4-gdal\tools\gdal-data"}
